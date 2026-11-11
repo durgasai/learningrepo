@@ -1,0 +1,36 @@
+research_task:
+  description: >
+    Research the most important recent news and developments about {topic}.
+    Focus on information relevant to the current year, {current_year}, and
+    identify concrete examples that help explain the key developments.
+  expected_output: >
+    Five to six concise bullet points covering the most relevant news and
+    developments about {topic}, with concrete examples where available.
+  agent: researcher
+
+reporting_task:
+  description: >
+    Synthesize the research about {topic} into a concise, easy-to-scan news
+    briefing. Start with a short overview before presenting any key points.
+    Follow it with a pictorial Mermaid diagram, five or six key-point bullets,
+    a separate examples section, and a brief overall summary. Do not expand
+    the briefing into a long-form report.
+  expected_output: |
+    Return Markdown with exactly these sections in this order:
+    ## Overview
+    Start with a short, plain-language introduction to {topic} and why it matters. Do not start with bullets.
+
+    ## Pictorial representation
+    Include a simple Mermaid flowchart in a ```mermaid code block. Show the main concept and its important components or relationships. Keep it to three to six nodes and use accurate, concise labels.
+
+    ## Key points
+    Include five or six concise bullets covering the most important recent developments.
+
+    ## Examples
+    Give concrete examples that illustrate the topic or key points.
+
+    ## Summary
+    End with a brief paragraph summarizing the topic.
+
+    Do not wrap the entire report in a code block. Keep claims grounded in the research.
+  agent: reporting_analyst
