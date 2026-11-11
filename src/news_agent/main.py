@@ -1,12 +1,33 @@
 #!/usr/bin/env python
+import re
 import sys
 import warnings
 
 from datetime import datetime
+from pathlib import Path
 
 from news_agent.crew import NewsAgent
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
+
+_MERMAID_BLOCK_PATTERN = re.compile(
+    r"(```mermaid[^\n]*\n)(.*?)(\n```)", re.IGNORECASE | re.DOTALL
+)
+_UNQUOTED_MERMAID_NODE_PATTERN = re.compile(
+    r'(\b[A-Za-z][A-Za-z0-9_]*\[)(?!["\'])([^\]\n]+)(\])'
+)
+
+
+def _quote_unquoted_mermaid_labels(markdown):
+    def quote_labels(block):
+        diagram = _UNQUOTED_MERMAID_NODE_PATTERN.sub(
+            lambda node: f'{node.group(1)}"{node.group(2).strip()}"{node.group(3)}',
+            block.group(2),
+        )
+        return f"{block.group(1)}{diagram}{block.group(3)}"
+
+    return _MERMAID_BLOCK_PATTERN.sub(quote_labels, markdown)
+
 
 # This main file is intended to be a way for you to run your
 # crew locally, so refrain from adding unnecessary logic into this file.
@@ -28,6 +49,12 @@ def run():
 
     try:
         NewsAgent().crew().kickoff(inputs=inputs)
+        notes_path = Path("notes.md")
+        notes = notes_path.read_text(encoding="utf-8")
+        notes_path.write_text(
+            _quote_unquoted_mermaid_labels(notes),
+            encoding="utf-8",
+        )
     except Exception as e:
         raise Exception(f"An error occurred while running the crew: {e}")
 
