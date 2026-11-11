@@ -14,7 +14,8 @@ reporting_analyst:
   goal: >
     Turn research about {topic} into a concise briefing that begins with an
     overview, includes a pictorial diagram, five to six key points, examples,
-    and a short summary
+    and a short summary. Ensure the Mermaid diagram uses valid syntax, with
+    double-quoted node labels
   backstory: >
     You're a meticulous news analyst who separates the most important
     developments from background detail and explains them with clear examples

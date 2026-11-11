@@ -21,7 +21,7 @@ reporting_task:
     Start with a short, plain-language introduction to {topic} and why it matters. Do not start with bullets.
 
     ## Pictorial representation
-    Include a simple Mermaid flowchart in a ```mermaid code block. Show the main concept and its important components or relationships. Keep it to three to six nodes and use accurate, concise labels.
+    Include a valid Mermaid flowchart in a ```mermaid code block. Use `flowchart TD`, simple alphanumeric node IDs, and double-quoted labels for every node (for example, A["Large Language Models (LLMs)"]). Put each node or edge on its own line and do not use semicolons. Keep the diagram to three to six nodes with accurate, concise labels.
 
     ## Key points
     Include five or six concise bullets covering the most important recent developments.

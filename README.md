@@ -41,6 +41,8 @@ Python ignoring the editable-install path file.
 When prompted, enter a topic to research. The crew produces a concise Markdown
 briefing that starts with an overview, followed by a Mermaid diagram, five to
 six key points, examples, and a short summary. The report is saved to `notes.md`.
+The diagram uses quoted Mermaid labels so punctuation such as parentheses
+doesn't break rendering.
 
 The topic and output format are defined in `src/news_agent/config/tasks.yaml`.
 
