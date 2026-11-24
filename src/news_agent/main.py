@@ -17,6 +17,24 @@ _UNQUOTED_MERMAID_NODE_PATTERN = re.compile(
     r'(\b[A-Za-z][A-Za-z0-9_]*\[)(?!["\'])([^\]\n]+)(\])'
 )
 
+_REQUIRED_SECTIONS = [
+    ("## Overview", "Overview unavailable."),
+    (
+        "## Pictorial representation",
+        "```mermaid\nflowchart TD\n    A[\"Topic\"] --> B[\"Key developments\"]\n```",
+    ),
+    ("## Key points", "- No key points were generated."),
+    ("## Examples", "- No examples were generated."),
+    ("## Risks and open questions", "- No risks or open questions were identified."),
+    ("## Summary", "Summary unavailable."),
+    (
+        "## Sources",
+        "- No sources were captured. Re-run with web search configured (e.g. `TAVILY_API_KEY` or `SERPER_API_KEY`) for cited results.",
+    ),
+]
+_HEADING_PATTERN = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
+_MARKDOWN_LINK_PATTERN = re.compile(r"\[[^\]]+\]\((https?://[^)\s]+)\)")
+
 
 def _quote_unquoted_mermaid_labels(markdown):
     def quote_labels(block):
@@ -27,6 +45,72 @@ def _quote_unquoted_mermaid_labels(markdown):
         return f"{block.group(1)}{diagram}{block.group(3)}"
 
     return _MERMAID_BLOCK_PATTERN.sub(quote_labels, markdown)
+
+
+def _strip_outer_code_fence(markdown):
+    text = (markdown or "").strip()
+    if not text.startswith("```"):
+        return text
+    lines = text.splitlines()
+    if len(lines) >= 2 and lines[0].startswith("```") and lines[-1].strip() == "```":
+        # Preserve inner fenced blocks (e.g. mermaid) by removing only outer wrapper.
+        return "\n".join(lines[1:-1]).strip()
+    return text
+
+
+def _section_body(markdown, heading):
+    pattern = re.compile(
+        rf"^{re.escape(heading)}\s*$\n?(.*?)(?=^##\s+|\Z)",
+        re.MULTILINE | re.DOTALL,
+    )
+    match = pattern.search(markdown)
+    if not match:
+        return None
+    return match.group(1).strip()
+
+
+def _ensure_required_sections(markdown):
+    text = _strip_outer_code_fence(markdown or "")
+    if not text:
+        text = ""
+
+    existing = {m.group(0) for m in _HEADING_PATTERN.finditer(text)}
+    for heading, placeholder in _REQUIRED_SECTIONS:
+        if heading in existing:
+            continue
+        if text and not text.endswith("\n"):
+            text += "\n"
+        if text:
+            text += "\n"
+        text += f"{heading}\n{placeholder}\n"
+        existing.add(heading)
+
+    sources_body = _section_body(text, "## Sources")
+    if sources_body is not None and not _MARKDOWN_LINK_PATTERN.search(sources_body):
+        note = (
+            "_No source links detected in this section. Treat claims as unverified "
+            "until sources are provided._"
+        )
+        if note not in sources_body:
+            text = re.sub(
+                rf"^(## Sources\s*$\n?)(.*?)(?=^##\s+|\Z)",
+                lambda m: (
+                    m.group(1)
+                    + m.group(2).rstrip()
+                    + ("\n" if m.group(2).strip() else "")
+                    + f"\n{note}\n"
+                ),
+                text,
+                flags=re.MULTILINE | re.DOTALL,
+            )
+
+    return text.strip() + "\n"
+
+
+def _postprocess_report(markdown):
+    text = _quote_unquoted_mermaid_labels(markdown or "")
+    text = _ensure_required_sections(text)
+    return text
 
 
 # This main file is intended to be a way for you to run your
@@ -52,7 +136,7 @@ def run():
         notes_path = Path("notes.md")
         notes = notes_path.read_text(encoding="utf-8")
         notes_path.write_text(
-            _quote_unquoted_mermaid_labels(notes),
+            _postprocess_report(notes),
             encoding="utf-8",
         )
     except Exception as e:

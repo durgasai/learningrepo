@@ -40,10 +40,14 @@ Python ignoring the editable-install path file.
 
 When prompted, enter a topic to research. The researcher uses a web search tool
 to gather recent findings and citations, then the reporting analyst produces a
-concise Markdown briefing that starts with an overview, followed by a Mermaid
-diagram, five to six key points, examples, a short summary, and a sources
-section with links. The report is saved to `notes.md`. The diagram uses quoted
-Mermaid labels so punctuation such as parentheses doesn't break rendering.
+concise, decision-useful Markdown briefing with: an overview (why it matters
+now), a Mermaid diagram, five to six key points (with impact and inline source
+attribution), examples, risks/open questions, a short summary, and a sources
+section with links. The report is saved to `notes.md`.
+
+After generation, the app post-processes `notes.md` to quote Mermaid labels (so
+punctuation such as parentheses doesn't break rendering) and to normalize
+required sections/citation placeholders for a more consistent, useful report.
 
 For best results, set a search API key in your environment (optional):
 - `TAVILY_API_KEY` (preferred if available)
