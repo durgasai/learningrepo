@@ -1,16 +1,21 @@
 research_task:
   description: >
-    Research the most important recent news and developments about {topic}
-    using the web_search tool. Focus on information relevant to the current
-    year, {current_year}. Run multiple targeted searches if needed to cover
-    different angles, compare sources, and confirm key developments. Prioritize
-    high-quality, recent sources and capture evidence needed for citations and
-    usefulness (impact, recency, and uncertainty).
+    Research the most important recent news and developments about {topic} for
+    {country} using the web_search tool. Focus on information relevant to the
+    current year, {current_year}. If {country} is not Global, prioritize local
+    and country-specific sources, coverage, and impact; when using the web_search
+    tool, include the country context (for example pass the country/country code
+    when supported and include the country in search queries) to surface local
+    news. Run multiple targeted searches if needed to cover different angles,
+    compare sources, and confirm key developments. Prioritize high-quality,
+    recent sources and capture evidence needed for citations and usefulness
+    (impact, recency, and uncertainty).
   expected_output: >
     A cited research brief with five to six findings covering the most relevant
-    news and developments about {topic}. For each finding include: a short
-    title; 1-2 sentence summary of what happened; why it matters/impact; a
-    concrete example or evidence detail when available; publication date or
+    news and developments about {topic} for {country}. For each finding include:
+    a short title; 1-2 sentence summary of what happened; why it matters/impact
+    (including local impact when a specific country is selected); a concrete
+    example or evidence detail when available; publication date or
     recency/timeframe when available; source/publisher; source URL; and a brief
     confidence note or limitation if information is uncertain, conflicting, or
     not recently dated. Also include 1-3 notable risks, open questions, or
@@ -20,24 +25,25 @@ research_task:
 
 reporting_task:
   description: >
-    Synthesize the cited research about {topic} into a concise, easy-to-scan,
-    decision-useful news briefing. Start with a short overview before presenting
-    any key points. Follow it with a pictorial Mermaid diagram, five or six
-    key-point bullets, a separate examples section, risks/open questions, a
-    brief overall summary, and a sources section. Ground claims in the research
-    findings and their URLs; state recency or uncertainty when relevant; do not
-    invent sources, dates, or unsupported details. Keep the briefing focused and
-    scannable.
+    Synthesize the cited research about {topic} for {country} into a concise,
+    easy-to-scan, decision-useful news briefing. Start with a short overview
+    before presenting any key points. Follow it with a pictorial Mermaid
+    diagram, five or six key-point bullets, a separate examples section,
+    risks/open questions, a brief overall summary, and a sources section.
+    If {country} is not Global, emphasize local developments, sources, and
+    impact for that country. Ground claims in the research findings and their
+    URLs; state recency or uncertainty when relevant; do not invent sources,
+    dates, or unsupported details. Keep the briefing focused and scannable.
   expected_output: |
     Return Markdown with exactly these sections in this order:
     ## Overview
-    Start with a short, plain-language introduction to {topic}, why it matters now, and the relevant timeframe ({current_year}/recent). Do not start with bullets.
+    Start with a short, plain-language introduction to {topic} in the context of {country}, why it matters now, and the relevant timeframe ({current_year}/recent). If {country} is Global, give a global overview; if a specific country is selected, focus on that country's/local perspective. Do not start with bullets.
 
     ## Pictorial representation
     Include a valid Mermaid flowchart in a ```mermaid code block. Use `flowchart TD`, simple alphanumeric node IDs, and double-quoted labels for every node (for example, A["Large Language Models (LLMs)"]). Put each node or edge on its own line and do not use semicolons. Keep the diagram to three to six nodes with accurate, concise labels that reflect the main developments or relationships.
 
     ## Key points
-    Include five or six concise bullets covering the most important recent developments. For each bullet, include: **what happened**, **why it matters/impact**, and an inline source attribution in parentheses (publisher or short source name; include date/timeframe when available). Prefer specific, recent, cited facts over vague claims.
+    Include five or six concise bullets covering the most important recent developments. For each bullet, include: **what happened**, **why it matters/impact**, and an inline source attribution in parentheses (publisher or short source name; include date/timeframe when available). Prefer specific, recent, cited facts over vague claims, with local relevance when a specific country is selected.
 
     ## Examples
     Give concrete examples that illustrate the topic or key points, grounded in the cited research. Tie each example to a source attribution in parentheses when possible.
@@ -46,7 +52,7 @@ reporting_task:
     Include 2-4 concise bullets on limitations, uncertainties, disagreements across sources, or things to watch next. Ground these in the research and note when evidence is limited.
 
     ## Summary
-    End with a brief paragraph summarizing the main takeaway, overall significance, and confidence/recency caveat if appropriate.
+    End with a brief paragraph summarizing the main takeaway, overall significance for {country}, and confidence/recency caveat if appropriate.
 
     ## Sources
     List the sources used as Markdown bullet links in the form `- [Title — Publisher, Date](URL)`. Include publisher and date/timeframe when available; if unavailable, omit it rather than guessing. Every major claim in the briefing should be traceable to a listed source.

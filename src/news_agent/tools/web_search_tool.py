@@ -17,22 +17,33 @@ class WebSearchToolInput(BaseModel):
     max_results: int = Field(
         6, ge=1, le=10, description="Maximum number of results to return (1-10)."
     )
+    country: str = Field(
+        "",
+        description=(
+            "Optional country for local news/results. Use an ISO 3166-1 alpha-2 code "
+            "(e.g. 'US', 'IN', 'GB') or country name when focusing on a specific country; "
+            "leave empty for global results."
+        ),
+    )
 
 
 class WebSearchTool(BaseTool):
     name: str = "web_search"
     description: str = (
         "Search the web for recent information about a topic. "
+        "Can focus on a specific country for local news when 'country' is provided. "
         "Returns a numbered list of results with title, URL, source/date when available, and snippet. "
         "Use these URLs as citations in research and reports."
     )
     args_schema: Type[BaseModel] = WebSearchToolInput
 
-    def _run(self, query: str, max_results: int = 6) -> str:
+    def _run(self, query: str, max_results: int = 6, country: str = "") -> str:
         query = (query or "").strip()
+        country = (country or "").strip()
         if not query:
             return "No query provided."
         max_results = max(1, min(int(max_results or 6), 10))
+        country_code = self._country_code(country)
 
         providers = (
             ("tavily", self._search_tavily),
@@ -42,27 +53,32 @@ class WebSearchTool(BaseTool):
         errors = []
         for name, fn in providers:
             try:
-                results = fn(query, max_results)
+                results = fn(query, max_results, country, country_code)
                 if results:
-                    return self._format_results(query, name, results)
+                    return self._format_results(query, name, results, country)
                 errors.append(f"{name}: no results")
             except Exception as e:
                 errors.append(f"{name}: {e}")
 
         if errors:
+            scope = f' in "{country}"' if country else ""
             return (
-                f'No web search results found for "{query}". '
+                f'No web search results found for "{query}"{scope}. '
                 f"Provider attempts: {'; '.join(errors)}"
             )
-        return f'No web search results found for "{query}".'
+        scope = f' in "{country}"' if country else ""
+        return f'No web search results found for "{query}"{scope}.'
 
-    def _search_tavily(self, query: str, max_results: int) -> List[dict]:
+    def _search_tavily(self, query: str, max_results: int, country: str = "", country_code: str = "") -> List[dict]:
         api_key = os.getenv("TAVILY_API_KEY")
         if not api_key:
             raise RuntimeError("TAVILY_API_KEY not set")
+        q = query
+        if country:
+            q = f"{query} {country} local news"
         payload = {
             "api_key": api_key,
-            "query": query,
+            "query": q,
             "search_depth": "basic",
             "max_results": max_results,
             "include_answer": False,
@@ -86,11 +102,17 @@ class WebSearchTool(BaseTool):
             )
         return results[:max_results]
 
-    def _search_serper(self, query: str, max_results: int) -> List[dict]:
+    def _search_serper(self, query: str, max_results: int, country: str = "", country_code: str = "") -> List[dict]:
         api_key = os.getenv("SERPER_API_KEY")
         if not api_key:
             raise RuntimeError("SERPER_API_KEY not set")
-        payload = {"q": query, "num": max_results}
+        q = query
+        payload = {"q": q, "num": max_results}
+        if country_code:
+            payload["gl"] = country_code.lower()
+            payload["hl"] = "en"
+        elif country:
+            payload["q"] = f"{query} {country}"
         data = self._post_json(
             "https://google.serper.dev/search",
             payload,
@@ -112,9 +134,15 @@ class WebSearchTool(BaseTool):
             )
         return results[:max_results]
 
-    def _search_duckduckgo(self, query: str, max_results: int) -> List[dict]:
+    def _search_duckduckgo(self, query: str, max_results: int, country: str = "", country_code: str = "") -> List[dict]:
         url = "https://html.duckduckgo.com/html/"
-        body = urllib.parse.urlencode({"q": query}).encode("utf-8")
+        q = query
+        params = {"q": q}
+        if country_code:
+            params["kl"] = f"{country_code.lower()}-en"
+        elif country:
+            params["q"] = f"{query} {country}"
+        body = urllib.parse.urlencode(params).encode("utf-8")
         req = urllib.request.Request(
             url,
             data=body,
@@ -176,8 +204,9 @@ class WebSearchTool(BaseTool):
         with urllib.request.urlopen(req, timeout=20) as resp:
             return json.loads(resp.read().decode("utf-8", errors="replace"))
 
-    def _format_results(self, query: str, provider: str, results: List[dict]) -> str:
-        lines = [f'Web search results for "{query}" (provider: {provider}):']
+    def _format_results(self, query: str, provider: str, results: List[dict], country: str = "") -> str:
+        scope = f', country: {country}' if country else ""
+        lines = [f'Web search results for "{query}" (provider: {provider}{scope}):']
         for i, item in enumerate(results, 1):
             title = (item.get("title") or "Untitled").strip()
             url = (item.get("url") or "").strip()
@@ -195,6 +224,18 @@ class WebSearchTool(BaseTool):
             "Use the URLs above as citations. When reporting, include a Sources section listing each cited title and URL."
         )
         return "\n".join(lines)
+
+    @staticmethod
+    def _country_code(country: str) -> str:
+        c = (country or "").strip()
+        if not c:
+            return ""
+        if len(c) == 2 and c.isalpha():
+            return c.upper()
+        match = re.search(r"\(([A-Za-z]{2})\)", c)
+        if match:
+            return match.group(1).upper()
+        return ""
 
     @staticmethod
     def _normalize_ddg_url(href: str) -> str:

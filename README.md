@@ -29,6 +29,8 @@ crewai install
 
 ## Running the Project
 
+### CLI
+
 To kickstart your crew of AI agents and begin task execution, run this from the root folder of your project:
 
 ```bash
@@ -38,16 +40,27 @@ $ UV_NO_EDITABLE=1 crewai run
 On this macOS setup, `UV_NO_EDITABLE=1` avoids an import failure caused by
 Python ignoring the editable-install path file.
 
-When prompted, enter a topic to research. The researcher uses a web search tool
-to gather recent findings and citations, then the reporting analyst produces a
-concise, decision-useful Markdown briefing with: an overview (why it matters
-now), a Mermaid diagram, five to six key points (with impact and inline source
-attribution), examples, risks/open questions, a short summary, and a sources
-section with links. The report is saved to `notes.md`.
+When prompted, enter a topic to research. The report is saved to `notes.md`.
 
-After generation, the app post-processes `notes.md` to quote Mermaid labels (so
-punctuation such as parentheses doesn't break rendering) and to normalize
-required sections/citation placeholders for a more consistent, useful report.
+### Web UI
+
+To run the local web interface (topic form + generated `notes.md` output view/download):
+
+```bash
+$ PYTHONPATH=src .venv/bin/python -m news_agent.ui
+```
+
+Then open [http://127.0.0.1:8000](http://127.0.0.1:8000). You will be prompted to log in first (demo/local credentials: username `admin`, password `password`).
+
+After login, enter a topic, select a country (or keep **Global** for worldwide coverage), and generate a briefing. The UI runs the crew, saves the post-processed report to `notes.md`, shows a rendered Markdown preview with client-side Mermaid diagram rendering (plus Mermaid/raw `notes.md` source), and provides a `notes.md` download link. When a specific country is selected, research/search and the briefing focus on local news and impact for that country. Diagram rendering loads Mermaid.js from a CDN in the browser.
+
+> Note: the login is a simple in-memory demo gate with hardcoded credentials for local use only; it is not production-grade security.
+
+You can also use the console script `news_agent_ui` if project scripts are installed in your environment.
+
+The researcher uses a web search tool to gather recent findings and citations, then the reporting analyst produces a concise, decision-useful Markdown briefing with: an overview (why it matters now), a Mermaid diagram, five to six key points (with impact and inline source attribution), examples, risks/open questions, a short summary, and a sources section with links.
+
+After generation, the app post-processes `notes.md` to quote Mermaid labels (so punctuation such as parentheses doesn't break rendering) and to normalize required sections/citation placeholders for a more consistent, useful report.
 
 For best results, set a search API key in your environment (optional):
 - `TAVILY_API_KEY` (preferred if available)

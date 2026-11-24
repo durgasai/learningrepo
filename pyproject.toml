@@ -13,6 +13,7 @@ dependencies = [
 [project.scripts]
 news_agent = "news_agent.main:run"
 run_crew = "news_agent.main:run"
+news_agent_ui = "news_agent.ui:run_server"
 train = "news_agent.main:train"
 replay = "news_agent.main:replay"
 test = "news_agent.main:test"

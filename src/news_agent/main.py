@@ -118,29 +118,45 @@ def _postprocess_report(markdown):
 # Replace with inputs you want to test with, it will automatically
 # interpolate any tasks and agents information
 
+def generate_notes(topic: str, output_path: str | Path = "notes.md", country: str = "") -> Path:
+    """
+    Run the crew for a topic (optionally focused on a country), post-process the report, and write notes.md output.
+    """
+    topic = (topic or "").strip()
+    country = (country or "").strip()
+    if not topic:
+        raise ValueError("A news topic is required.")
+    if not country:
+        country = "Global"
+
+    inputs = {
+        'topic': topic,
+        'country': country,
+        'current_year': str(datetime.now().year)
+    }
+
+    notes_path = Path(output_path)
+    try:
+        NewsAgent().crew().kickoff(inputs=inputs)
+        source_path = Path("notes.md")
+        if not source_path.exists():
+            raise FileNotFoundError("Crew run completed but notes.md was not created.")
+        notes = source_path.read_text(encoding="utf-8")
+        processed = _postprocess_report(notes)
+        notes_path.write_text(processed, encoding="utf-8")
+        if source_path.resolve() != notes_path.resolve():
+            source_path.write_text(processed, encoding="utf-8")
+        return notes_path
+    except Exception as e:
+        raise Exception(f"An error occurred while running the crew: {e}") from e
+
+
 def run():
     """
     Run the crew.
     """
     topic = input("Enter a news topic: ").strip()
-    if not topic:
-        raise ValueError("A news topic is required.")
-
-    inputs = {
-        'topic': topic,
-        'current_year': str(datetime.now().year)
-    }
-
-    try:
-        NewsAgent().crew().kickoff(inputs=inputs)
-        notes_path = Path("notes.md")
-        notes = notes_path.read_text(encoding="utf-8")
-        notes_path.write_text(
-            _postprocess_report(notes),
-            encoding="utf-8",
-        )
-    except Exception as e:
-        raise Exception(f"An error occurred while running the crew: {e}")
+    generate_notes(topic)
 
 
 def train():
