@@ -38,13 +38,22 @@ $ UV_NO_EDITABLE=1 crewai run
 On this macOS setup, `UV_NO_EDITABLE=1` avoids an import failure caused by
 Python ignoring the editable-install path file.
 
-When prompted, enter a topic to research. The crew produces a concise Markdown
-briefing that starts with an overview, followed by a Mermaid diagram, five to
-six key points, examples, and a short summary. The report is saved to `notes.md`.
-The diagram uses quoted Mermaid labels so punctuation such as parentheses
-doesn't break rendering.
+When prompted, enter a topic to research. The researcher uses a web search tool
+to gather recent findings and citations, then the reporting analyst produces a
+concise Markdown briefing that starts with an overview, followed by a Mermaid
+diagram, five to six key points, examples, a short summary, and a sources
+section with links. The report is saved to `notes.md`. The diagram uses quoted
+Mermaid labels so punctuation such as parentheses doesn't break rendering.
 
-The topic and output format are defined in `src/news_agent/config/tasks.yaml`.
+For best results, set a search API key in your environment (optional):
+- `TAVILY_API_KEY` (preferred if available)
+- `SERPER_API_KEY`
+
+If neither is set, the agent falls back to DuckDuckGo HTML search results.
+
+The topic and output format are defined in `src/news_agent/config/tasks.yaml`. Also `knowledge/user_preference.txt` and existing `notes.md` are sample/data files; I shouldn't modify them except if necessary - user tagged notes.md but didn't ask to regenerate it. No.
+
+I should add unit tests for the new web search tool to verify citation-friendly formatting and provider behavior/mocking. This keeps change validated without needing LLM/network in general. I can create `tests/test_web_search_tool.py` and mock `urllib.request.urlopen` and env vars. I'll inspect how to structure tests consistent with existing unittest style. Let us write tests.
 
 ## Understanding Your Crew
 
